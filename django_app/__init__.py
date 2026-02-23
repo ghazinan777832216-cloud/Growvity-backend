@@ -1,0 +1,1 @@
+# Growvity Django Application

@@ -1,0 +1,9 @@
+django-neomodel>=0.1.6
+neomodel>=5.2
+python-dotenv>=1.0
+requests>=2.31
+django-cors-headers>=4.0
+djangorestframework>=3.14
+django>=4.2
+compute-rhino3d>=0.12.2
+rhino3dm>=8.17.0

@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+neo4j_data/
+neo4j_logs/
+.env
