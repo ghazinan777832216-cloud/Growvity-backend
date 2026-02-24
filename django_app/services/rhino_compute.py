@@ -2,13 +2,28 @@
 Growvity Rhino Compute Service - Simplified
 Based on Test_Geo.py structure for direct Rhino Compute integration
 """
-import compute_rhino3d.Util
-import compute_rhino3d.Grasshopper as gh
-import rhino3dm
+# Try to import Rhino/Compute libraries; if unavailable, enable a safe offline mode
+try:
+    import compute_rhino3d.Util as _cr_util
+    import compute_rhino3d.Grasshopper as gh
+    import rhino3dm
+    HAVE_RHINO = True
+except Exception:
+    _cr_util = None  # type: ignore
+    gh = None  # type: ignore
+    rhino3dm = None  # type: ignore
+    HAVE_RHINO = False
 import json
 import base64
 from typing import Dict, Any
 from django.conf import settings
+import os
+
+# Development toggle: allow running the backend without Rhino Compute
+# If USE_DUMMY_RHINO is set to a truthy value, compute_building will return an empty string
+# to indicate no geometry is produced. This helps running the server in environments without
+# Rhino Compute installed (e.g., local dev machines).
+USE_DUMMY_RHINO = str(os.environ.get('USE_DUMMY_RHINO', '0')).lower() in ('1', 'true', 'yes')
 
 
 class RhinoComputeService:
@@ -39,15 +54,18 @@ class RhinoComputeService:
         Raises:
             RuntimeError: If Rhino Compute fails
         """
+        # If in dummy mode, skip actual Rhino Compute and return empty GLB
+        if USE_DUMMY_RHINO or not HAVE_RHINO:
+            return ""
         # Set Rhino Compute URL
-        compute_rhino3d.Util.url = cls.BASE_URL
+        _cr_util.url = cls.BASE_URL  # type: ignore
         
         try:
             # Prepare input trees (matching Test_Geo.py)
             input_trees = cls._prepare_input_trees(building_data)
             
             # Execute Grasshopper definition
-            output = gh.EvaluateDefinition(cls.GH_DEFINITION, input_trees)
+            output = gh.EvaluateDefinition(cls.GH_DEFINITION, input_trees)  # type: ignore
             
             # Extract geometry from output
             glb_base64 = cls._extract_geometry(output)
@@ -55,6 +73,9 @@ class RhinoComputeService:
             return glb_base64
             
         except Exception as e:
+            if USE_DUMMY_RHINO:
+                # In dummy mode, treat compute failure as non-fatal geometry absence
+                return ""
             raise RuntimeError(f"Rhino Compute failed: {str(e)}")
     
     @classmethod

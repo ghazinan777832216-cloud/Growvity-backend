@@ -8,6 +8,9 @@ ENV PYTHONUNBUFFERED 1
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    cmake \
+    python3-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
